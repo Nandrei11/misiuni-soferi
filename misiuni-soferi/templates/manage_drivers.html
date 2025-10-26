@@ -44,15 +44,15 @@
         <h2>📋 Lista Șoferi ({{ drivers|length }})</h2>
         
         {% if drivers %}
-            {% for driver_id, driver in drivers.items() %}
-            <div class="driver" id="driver-{{ driver_id }}">
+            {% for driver in drivers %}
+            <div class="driver" id="driver-{{ driver.id }}">
                 <div>
                     <strong>{{ driver.prenume }} {{ driver.nume }}</strong><br>
-                    <small>ID: {{ driver_id }}</small>
+                    <small>ID: {{ driver.id }}</small>
                 </div>
                 <div>
-                    <button class="btn btn-sm btn-warning" onclick="editDriver('{{ driver_id }}')">✏️ Modifică</button>
-                    <a href="/delete_driver/{{ driver_id }}" class="btn btn-sm btn-danger" onclick="return confirm('Sigur vrei să ștergi acest șofer?')">🗑️ Șterge</a>
+                    <button class="btn btn-sm btn-warning" onclick="editDriver('{{ driver.id }}')">✏️ Modifică</button>
+                    <a href="/delete_driver/{{ driver.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Sigur vrei să ștergi acest șofer?')">🗑️ Șterge</a>
                 </div>
             </div>
             {% endfor %}
