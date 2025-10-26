@@ -44,16 +44,16 @@
         <h2>📋 Lista Vehicule ({{ vehicles|length }})</h2>
         
         {% if vehicles %}
-            {% for vehicle_id, vehicle in vehicles.items() %}
-            <div class="vehicle" id="vehicle-{{ vehicle_id }}">
+            {% for vehicle in vehicles %}
+            <div class="vehicle" id="vehicle-{{ vehicle.id }}">
                 <div>
                     <strong>{{ vehicle.tip }}</strong><br>
                     <small>Număr: {{ vehicle.nr_inmatriculare }}</small><br>
-                    <small>ID: {{ vehicle_id }}</small>
+                    <small>ID: {{ vehicle.id }}</small>
                 </div>
                 <div>
-                    <button class="btn btn-sm btn-warning" onclick="editVehicle('{{ vehicle_id }}')">✏️ Modifică</button>
-                    <a href="/delete_vehicle/{{ vehicle_id }}" class="btn btn-sm btn-danger" onclick="return confirm('Sigur vrei să ștergi acest vehicul?')">🗑️ Șterge</a>
+                    <button class="btn btn-sm btn-warning" onclick="editVehicle('{{ vehicle.id }}')">✏️ Modifică</button>
+                    <a href="/delete_vehicle/{{ vehicle.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Sigur vrei să ștergi acest vehicul?')">🗑️ Șterge</a>
                 </div>
             </div>
             {% endfor %}
