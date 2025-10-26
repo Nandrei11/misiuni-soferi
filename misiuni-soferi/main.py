@@ -305,6 +305,27 @@ def driver_view(driver_id):
                          driver_info=driver_info,
                          vehicles=vehicles)
 
+# Rute pentru obținerea datelor pentru editare
+@app.route('/get_driver_data/<driver_id>')
+@admin_required
+def get_driver_data(driver_id):
+    users = load_db('users.json')
+    
+    if driver_id in users:
+        return jsonify({'success': True, 'driver': users[driver_id]})
+    
+    return jsonify({'success': False, 'error': 'Șoferul nu a fost găsit'})
+
+@app.route('/get_vehicle_data/<vehicle_id>')
+@admin_required
+def get_vehicle_data(vehicle_id):
+    vehicles = load_db('vehicles.json')
+    
+    if vehicle_id in vehicles:
+        return jsonify({'success': True, 'vehicle': vehicles[vehicle_id]})
+    
+    return jsonify({'success': False, 'error': 'Vehiculul nu a fost găsit'})
+
 if __name__ == '__main__':
     # Inițializează baza de date dacă nu există
     if not os.path.exists('users.json'):
@@ -325,4 +346,5 @@ if __name__ == '__main__':
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
