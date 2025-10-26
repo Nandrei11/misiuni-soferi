@@ -1,24 +1,13 @@
 import os
-import time
+import psycopg2
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from datetime import datetime, date
 from functools import wraps
+from dotenv import load_dotenv
 
-# Încercă să importe psycopg2 cu fallback
-try:
-    import psycopg2
-    print("✅ psycopg2 importat cu succes")
-except ImportError:
-    print("❌ psycopg2 nu este instalat. Instalează-l cu: pip install psycopg2-binary")
+load_dotenv()
 
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-    print("✅ python-dotenv importat cu succes")
-except ImportError:
-    print("❌ python-dotenv nu este instalat")
-
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 app.secret_key = 'misiuni_soferi_secret_key_2024_postgres'
 
 # Funcție pentru conexiune la baza de date cu retry
@@ -575,4 +564,5 @@ if __name__ == '__main__':
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
