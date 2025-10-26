@@ -3,114 +3,104 @@ import psycopg2
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from datetime import datetime, date
 from functools import wraps
-from dotenv import load_dotenv
 
-load_dotenv()
-
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__)
 app.secret_key = 'misiuni_soferi_secret_key_2024_postgres'
 
-# Funcție pentru conexiune la baza de date cu retry
+# Funcție pentru conexiune la baza de date
 def get_db_connection():
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            conn = psycopg2.connect(os.environ.get('DATABASE_URL'))
-            print(f"✅ Conexiune PostgreSQL reușită (attempt {attempt + 1})")
-            return conn
-        except Exception as e:
-            print(f"❌ Eroare conexiune PostgreSQL (attempt {attempt + 1}): {e}")
-            if attempt < max_retries - 1:
-                time.sleep(2)
-            else:
-                raise e
-
-# Restul codului rămâne la fel...
+    database_url = os.environ.get('DATABASE_URL')
+    if not database_url:
+        raise Exception("DATABASE_URL nu este setat!")
+    
+    conn = psycopg2.connect(database_url)
+    return conn
 
 # Inițializare bază de date
 def init_db():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # Tabela șoferi
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS drivers (
-            id VARCHAR(50) PRIMARY KEY,
-            nume VARCHAR(100) NOT NULL,
-            prenume VARCHAR(100) NOT NULL,
-            created_at TIMESTAMP,
-            updated_at TIMESTAMP
-        )
-    ''')
-    
-    # Tabela vehicule
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS vehicles (
-            id VARCHAR(50) PRIMARY KEY,
-            tip VARCHAR(100) NOT NULL,
-            nr_inmatriculare VARCHAR(20) NOT NULL,
-            sofer_id VARCHAR(50),
-            created_at TIMESTAMP,
-            updated_at TIMESTAMP
-        )
-    ''')
-    
-    # Tabela misiuni
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS missions (
-            id VARCHAR(50) PRIMARY KEY,
-            sofer_id VARCHAR(50) NOT NULL,
-            vehicle_id VARCHAR(50) NOT NULL,
-            data_inceput DATE NOT NULL,
-            data_sfarsit DATE NOT NULL,
-            destinatie TEXT NOT NULL,
-            distanta INTEGER NOT NULL,
-            persoana_contact TEXT NOT NULL,
-            status VARCHAR(20) DEFAULT 'active',
-            created_at TIMESTAMP,
-            updated_at TIMESTAMP
-        )
-    ''')
-    
-    # Tabela admin
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS admin (
-            username VARCHAR(50) PRIMARY KEY,
-            password VARCHAR(100) NOT NULL
-        )
-    ''')
-    
-    # Verifică dacă există deja date
-    cur.execute("SELECT COUNT(*) FROM admin WHERE username = 'admin'")
-    if cur.fetchone()[0] == 0:
-        # Inserează admin
-        cur.execute("INSERT INTO admin (username, password) VALUES ('admin', 'admin123')")
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
         
-        # Șoferi inițiali
-        drivers_data = [
-            ('sofer001', 'Popescu', 'Ion'),
-            ('sofer002', 'Ionescu', 'Vasile')
-        ]
-        for driver_id, nume, prenume in drivers_data:
-            cur.execute(
-                "INSERT INTO drivers (id, nume, prenume, created_at) VALUES (%s, %s, %s, %s)",
-                (driver_id, nume, prenume, datetime.now())
+        # Tabela șoferi
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS drivers (
+                id VARCHAR(50) PRIMARY KEY,
+                nume VARCHAR(100) NOT NULL,
+                prenume VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP
             )
+        ''')
         
-        # Vehicule inițiale
-        vehicles_data = [
-            ('vehicle001', 'Duba', 'B-123-ABC', 'sofer001'),
-            ('vehicle002', 'Camion', 'B-456-DEF', 'sofer002')
-        ]
-        for vehicle_id, tip, nr_inmatriculare, sofer_id in vehicles_data:
-            cur.execute(
-                "INSERT INTO vehicles (id, tip, nr_inmatriculare, sofer_id, created_at) VALUES (%s, %s, %s, %s, %s)",
-                (vehicle_id, tip, nr_inmatriculare, sofer_id, datetime.now())
+        # Tabela vehicule
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS vehicles (
+                id VARCHAR(50) PRIMARY KEY,
+                tip VARCHAR(100) NOT NULL,
+                nr_inmatriculare VARCHAR(20) NOT NULL,
+                created_at TIMESTAMP
             )
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+        ''')
+        
+        # Tabela misiuni
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS missions (
+                id VARCHAR(50) PRIMARY KEY,
+                sofer_id VARCHAR(50) NOT NULL,
+                vehicle_id VARCHAR(50) NOT NULL,
+                data_inceput DATE NOT NULL,
+                data_sfarsit DATE NOT NULL,
+                destinatie TEXT NOT NULL,
+                distanta INTEGER NOT NULL,
+                persoana_contact TEXT NOT NULL,
+                status VARCHAR(20) DEFAULT 'active',
+                created_at TIMESTAMP
+            )
+        ''')
+        
+        # Tabela admin
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS admin (
+                username VARCHAR(50) PRIMARY KEY,
+                password VARCHAR(100) NOT NULL
+            )
+        ''')
+        
+        # Verifică dacă există deja date
+        cur.execute("SELECT COUNT(*) FROM admin WHERE username = 'admin'")
+        if cur.fetchone()[0] == 0:
+            # Inserează admin
+            cur.execute("INSERT INTO admin (username, password) VALUES ('admin', 'admin123')")
+            
+            # Șoferi inițiali
+            drivers_data = [
+                ('sofer001', 'Popescu', 'Ion'),
+                ('sofer002', 'Ionescu', 'Vasile')
+            ]
+            for driver_id, nume, prenume in drivers_data:
+                cur.execute(
+                    "INSERT INTO drivers (id, nume, prenume, created_at) VALUES (%s, %s, %s, %s)",
+                    (driver_id, nume, prenume, datetime.now())
+                )
+            
+            # Vehicule inițiale
+            vehicles_data = [
+                ('vehicle001', 'Duba', 'B-123-ABC'),
+                ('vehicle002', 'Camion', 'B-456-DEF')
+            ]
+            for vehicle_id, tip, nr_inmatriculare in vehicles_data:
+                cur.execute(
+                    "INSERT INTO vehicles (id, tip, nr_inmatriculare, created_at) VALUES (%s, %s, %s, %s)",
+                    (vehicle_id, tip, nr_inmatriculare, datetime.now())
+                )
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("✅ Baza de date PostgreSQL inițializată cu succes!")
+        
+    except Exception as e:
+        print(f"❌ Eroare la inițializarea bazei de date: {e}")
 
 # Decorator pentru verificare admin
 def admin_required(f):
@@ -139,7 +129,7 @@ def login():
         cur.close()
         conn.close()
         
-        if admin and admin[1] == password:  # admin[1] este password
+        if admin and admin[1] == password:
             session['is_admin'] = True
             return redirect(url_for('admin_dashboard'))
         else:
@@ -181,18 +171,14 @@ def admin_dashboard():
     
     today = date.today()
     
-    # Separa misiunile active de cele istorice
-    active_missions = [m for m in missions if m[4] >= today]  # m[4] este data_sfarsit
-    completed_missions = [m for m in missions if m[4] < today]
-    
     # Convertim la liste de dicționare pentru template
     def mission_to_dict(mission):
         return {
             'id': mission[0],
             'sofer_id': mission[1],
             'vehicle_id': mission[2],
-            'data_inceput': mission[3],
-            'data_sfarsit': mission[4],
+            'data_inceput': mission[3].strftime('%Y-%m-%d'),
+            'data_sfarsit': mission[4].strftime('%Y-%m-%d'),
             'destinatie': mission[5],
             'distanta': mission[6],
             'persoana_contact': mission[7],
@@ -203,8 +189,16 @@ def admin_dashboard():
             'nr_inmatriculare': mission[12]
         }
     
-    active_missions = [mission_to_dict(m) for m in active_missions]
-    completed_missions = [mission_to_dict(m) for m in completed_missions]
+    # Separa misiunile active de cele istorice
+    active_missions = []
+    completed_missions = []
+    
+    for mission in missions:
+        mission_dict = mission_to_dict(mission)
+        if mission[4] >= today:  # data_sfarsit
+            active_missions.append(mission_dict)
+        else:
+            completed_missions.append(mission_dict)
     
     # Convertim șoferi și vehicule la dicționare
     drivers_dict = [{'id': d[0], 'nume': d[1], 'prenume': d[2]} for d in drivers]
@@ -235,7 +229,7 @@ def create_mission():
         request.form.get('data_inceput'),
         request.form.get('data_sfarsit'),
         request.form.get('destinatie'),
-        request.form.get('distanta'),
+        int(request.form.get('distanta')),
         request.form.get('persoana_contact'),
         'active',
         datetime.now()
@@ -254,7 +248,7 @@ def update_mission(mission_id):
     cur.execute('''
         UPDATE missions 
         SET sofer_id = %s, vehicle_id = %s, data_inceput = %s, data_sfarsit = %s,
-            destinatie = %s, distanta = %s, persoana_contact = %s, updated_at = %s
+            destinatie = %s, distanta = %s, persoana_contact = %s
         WHERE id = %s
     ''', (
         request.form.get('sofer'),
@@ -262,9 +256,8 @@ def update_mission(mission_id):
         request.form.get('data_inceput'),
         request.form.get('data_sfarsit'),
         request.form.get('destinatie'),
-        request.form.get('distanta'),
+        int(request.form.get('distanta')),
         request.form.get('persoana_contact'),
-        datetime.now(),
         mission_id
     ))
     conn.commit()
@@ -300,8 +293,8 @@ def get_mission_data(mission_id):
             'id': mission[0],
             'sofer_id': mission[1],
             'vehicle_id': mission[2],
-            'data_inceput': mission[3].isoformat() if mission[3] else '',
-            'data_sfarsit': mission[4].isoformat() if mission[4] else '',
+            'data_inceput': mission[3].strftime('%Y-%m-%d'),
+            'data_sfarsit': mission[4].strftime('%Y-%m-%d'),
             'destinatie': mission[5],
             'distanta': mission[6],
             'persoana_contact': mission[7]
@@ -309,9 +302,6 @@ def get_mission_data(mission_id):
         return jsonify({'success': True, 'mission': mission_dict})
     
     return jsonify({'success': False, 'error': 'Misiunea nu a fost găsită'})
-
-# === RUTELE PENTRU ȘOFERI ȘI VEHICULE RĂMÂN SIMILARE ===
-# Le adaptez pentru PostgreSQL...
 
 @app.route('/export_active_missions')
 @admin_required
@@ -336,7 +326,7 @@ def export_active_missions():
     text_to_copy += "══════════════════\n\n"
     
     for mission in active_missions:
-        text_to_copy += f"👤 *Șofer:* {mission[10]} {mission[9]}\n"  # prenume, nume
+        text_to_copy += f"👤 *Șofer:* {mission[10]} {mission[9]}\n"
         text_to_copy += f"🚗 *Vehicul:* {mission[11]} - {mission[12]}\n"
         text_to_copy += f"📅 *Perioadă:* {mission[3]} - {mission[4]}\n"
         text_to_copy += f"🎯 *Destinație:* {mission[5]}\n"
@@ -391,12 +381,11 @@ def update_driver(driver_id):
     cur = conn.cursor()
     cur.execute('''
         UPDATE drivers 
-        SET nume = %s, prenume = %s, updated_at = %s
+        SET nume = %s, prenume = %s
         WHERE id = %s
     ''', (
         request.form.get('nume'),
         request.form.get('prenume'),
-        datetime.now(),
         driver_id
     ))
     conn.commit()
@@ -476,12 +465,11 @@ def update_vehicle(vehicle_id):
     cur = conn.cursor()
     cur.execute('''
         UPDATE vehicles 
-        SET tip = %s, nr_inmatriculare = %s, updated_at = %s
+        SET tip = %s, nr_inmatriculare = %s
         WHERE id = %s
     ''', (
         request.form.get('tip'),
         request.form.get('nr_inmatriculare'),
-        datetime.now(),
         vehicle_id
     ))
     conn.commit()
@@ -543,8 +531,8 @@ def driver_view(driver_id):
     for mission in missions:
         missions_dict.append({
             'id': mission[0],
-            'data_inceput': mission[3],
-            'data_sfarsit': mission[4],
+            'data_inceput': mission[3].strftime('%Y-%m-%d'),
+            'data_sfarsit': mission[4].strftime('%Y-%m-%d'),
             'destinatie': mission[5],
             'distanta': mission[6],
             'persoana_contact': mission[7],
@@ -564,5 +552,3 @@ if __name__ == '__main__':
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
-
-
