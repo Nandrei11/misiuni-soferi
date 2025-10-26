@@ -130,6 +130,16 @@ def update_mission(mission_id):
     
     return jsonify({'success': False, 'error': 'Misiunea nu a fost găsită'})
 
+@app.route('/get_mission_data/<mission_id>')
+@admin_required
+def get_mission_data(mission_id):
+    missions = load_db('missions.json')
+    
+    if mission_id in missions:
+        return jsonify({'success': True, 'mission': missions[mission_id]})
+    
+    return jsonify({'success': False, 'error': 'Misiunea nu a fost găsită'})
+
 @app.route('/delete_mission/<mission_id>')
 @admin_required
 def delete_mission(mission_id):
@@ -315,3 +325,4 @@ if __name__ == '__main__':
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
