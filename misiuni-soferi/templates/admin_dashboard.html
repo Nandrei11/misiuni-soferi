@@ -46,15 +46,15 @@
             <form id="createMissionForm">
                 <select name="sofer" required>
                     <option value="">Alege șoferul</option>
-                    {% for driver_id, driver in drivers.items() %}
-                    <option value="{{ driver_id }}">{{ driver.prenume }} {{ driver.nume }}</option>
+                    {% for driver in drivers %}
+                    <option value="{{ driver.id }}">{{ driver.prenume }} {{ driver.nume }}</option>
                     {% endfor %}
                 </select>
                 
                 <select name="vehicul" required>
                     <option value="">Alege vehiculul</option>
-                    {% for vehicle_id, vehicle in vehicles.items() %}
-                    <option value="{{ vehicle_id }}">{{ vehicle.tip }} - {{ vehicle.nr_inmatriculare }}</option>
+                    {% for vehicle in vehicles %}
+                    <option value="{{ vehicle.id }}">{{ vehicle.tip }} - {{ vehicle.nr_inmatriculare }}</option>
                     {% endfor %}
                 </select>
                 
@@ -78,17 +78,14 @@
         <div id="active-tab" class="tab-content active">
             <h2>🚀 Misiuni Active</h2>
             {% if active_missions %}
-                {% for mission_id, mission in active_missions.items() %}
-                <div class="mission" id="mission-{{ mission_id }}">
-                    {% set driver = drivers.get(mission.sofer, {}) %}
-                    {% set vehicle = vehicles.get(mission.vehicul, {}) %}
-                    
+                {% for mission in active_missions %}
+                <div class="mission" id="mission-{{ mission.id }}">
                     <div class="mission-actions">
-                        <button class="btn btn-sm btn-warning" onclick="editMission('{{ mission_id }}')">✏️ Modifică</button>
-                        <a href="/delete_mission/{{ mission_id }}" class="btn btn-sm btn-danger" onclick="return confirm('Sigur vrei să ștergi această misiune?')">🗑️ Șterge</a>
+                        <button class="btn btn-sm btn-warning" onclick="editMission('{{ mission.id }}')">✏️ Modifică</button>
+                        <a href="/delete_mission/{{ mission.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Sigur vrei să ștergi această misiune?')">🗑️ Șterge</a>
                     </div>
                     
-                    <strong>{{ driver.prenume }} {{ driver.nume }}</strong> - {{ vehicle.tip }} {{ vehicle.nr_inmatriculare }}<br>
+                    <strong>{{ mission.prenume }} {{ mission.nume }}</strong> - {{ mission.tip }} {{ mission.nr_inmatriculare }}<br>
                     📅 {{ mission.data_inceput }} - {{ mission.data_sfarsit }} | 🎯 {{ mission.destinatie }}<br>
                     📏 {{ mission.distanta }} km | 📞 {{ mission.persoana_contact }}
                 </div>
@@ -104,12 +101,9 @@
         <div id="history-tab" class="tab-content">
             <h2>📚 Istoric Misiuni</h2>
             {% if completed_missions %}
-                {% for mission_id, mission in completed_missions.items() %}
+                {% for mission in completed_missions %}
                 <div class="mission completed-mission">
-                    {% set driver = drivers.get(mission.sofer, {}) %}
-                    {% set vehicle = vehicles.get(mission.vehicul, {}) %}
-                    
-                    <strong>{{ driver.prenume }} {{ driver.nume }}</strong> - {{ vehicle.tip }} {{ vehicle.nr_inmatriculare }}<br>
+                    <strong>{{ mission.prenume }} {{ mission.nume }}</strong> - {{ mission.tip }} {{ mission.nr_inmatriculare }}<br>
                     📅 {{ mission.data_inceput }} - {{ mission.data_sfarsit }} | 🎯 {{ mission.destinatie }}<br>
                     📏 {{ mission.distanta }} km | 📞 {{ mission.persoana_contact }}
                 </div>
@@ -132,15 +126,15 @@
                 
                 <select name="sofer" id="edit_sofer" required>
                     <option value="">Alege șoferul</option>
-                    {% for driver_id, driver in drivers.items() %}
-                    <option value="{{ driver_id }}">{{ driver.prenume }} {{ driver.nume }}</option>
+                    {% for driver in drivers %}
+                    <option value="{{ driver.id }}">{{ driver.prenume }} {{ driver.nume }}</option>
                     {% endfor %}
                 </select>
                 
                 <select name="vehicul" id="edit_vehicul" required>
                     <option value="">Alege vehiculul</option>
-                    {% for vehicle_id, vehicle in vehicles.items() %}
-                    <option value="{{ vehicle_id }}">{{ vehicle.tip }} - {{ vehicle.nr_inmatriculare }}</option>
+                    {% for vehicle in vehicles %}
+                    <option value="{{ vehicle.id }}">{{ vehicle.tip }} - {{ vehicle.nr_inmatriculare }}</option>
                     {% endfor %}
                 </select>
                 
@@ -181,8 +175,8 @@
                 
                 if (missionData.success) {
                     document.getElementById('edit_mission_id').value = missionId;
-                    document.getElementById('edit_sofer').value = missionData.mission.sofer;
-                    document.getElementById('edit_vehicul').value = missionData.mission.vehicul;
+                    document.getElementById('edit_sofer').value = missionData.mission.sofer_id;
+                    document.getElementById('edit_vehicul').value = missionData.mission.vehicle_id;
                     document.getElementById('edit_data_inceput').value = missionData.mission.data_inceput;
                     document.getElementById('edit_data_sfarsit').value = missionData.mission.data_sfarsit;
                     document.getElementById('edit_destinatie').value = missionData.mission.destinatie;
