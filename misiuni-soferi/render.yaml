@@ -4,9 +4,10 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: cd misiuni-soferi && python main.py
+    startCommand: python main.py
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: misiuni-soferi-db
           property: connectionString
+
