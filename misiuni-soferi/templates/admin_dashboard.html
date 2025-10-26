@@ -5,27 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body { font-family: Arial; margin: 0; padding: 20px; background: #f0f2f5; }
-        .container { max-width: 1000px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
         .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; text-decoration: none; display: inline-block; }
         .mission { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .mission-form { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .mission-form input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .mission-form select, .mission-form input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .menu { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚛 Panou Admin</h1>
-            <a href="/export_active_missions" class="btn" target="_blank">📤 Exportă Misiuni Active</a>
-            <a href="/logout" class="btn" style="background: #dc3545;">🚪 Logout</a>
+            <h1>🚛 Panou Admin - Misiuni Șoferi</h1>
+            <div class="menu">
+                <a href="/admin" class="btn">📋 Misiuni</a>
+                <a href="/manage_drivers" class="btn">👥 Gestionează Șoferi</a>
+                <a href="/manage_vehicles" class="btn">🚗 Gestionează Vehicule</a>
+                <a href="/export_active_missions" class="btn" target="_blank">📤 Exportă Misiuni Active</a>
+                <a href="/logout" class="btn" style="background: #dc3545;">🚪 Logout</a>
+            </div>
         </div>
 
         <div class="mission-form">
             <h2>➕ Creează Misiune Nouă</h2>
             <form id="createMissionForm">
-                <input type="text" name="sofer" placeholder="ID Șofer (ex: sofer1)" required>
-                <input type="text" name="vehicul" placeholder="ID Vehicul (ex: vehicle1)" required>
+                <select name="sofer" required>
+                    <option value="">Alege șoferul</option>
+                    {% for driver_id, driver in drivers.items() %}
+                    <option value="{{ driver_id }}">{{ driver.prenume }} {{ driver.nume }}</option>
+                    {% endfor %}
+                </select>
+                
+                <select name="vehicul" required>
+                    <option value="">Alege vehiculul</option>
+                    {% for vehicle_id, vehicle in vehicles.items() %}
+                    <option value="{{ vehicle_id }}">{{ vehicle.tip }} - {{ vehicle.nr_inmatriculare }}</option>
+                    {% endfor %}
+                </select>
+                
                 <input type="date" name="data" required>
                 <input type="text" name="destinatie" placeholder="Destinație" required>
                 <input type="number" name="distanta" placeholder="Distanță (km)" required>
@@ -37,7 +55,9 @@
         <h2>📋 Misiuni Active ({{ active_missions|length }})</h2>
         {% for mission_id, mission in active_missions.items() %}
         <div class="mission">
-            <strong>{{ mission.sofer }}</strong> - {{ mission.vehicul }}<br>
+            {% set driver = drivers.get(mission.sofer, {}) %}
+            {% set vehicle = vehicles.get(mission.vehicul, {}) %}
+            <strong>{{ driver.prenume }} {{ driver.nume }}</strong> - {{ vehicle.tip }} {{ vehicle.nr_inmatriculare }}<br>
             📅 {{ mission.data }} | 🎯 {{ mission.destinatie }}<br>
             📏 {{ mission.distanta }} km | 📞 {{ mission.persoana_contact }}
         </div>
