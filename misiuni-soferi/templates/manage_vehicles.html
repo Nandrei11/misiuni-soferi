@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestionează Vehicule - Misiuni Șoferi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial; margin: 0; padding: 20px; background: #f0f2f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .vehicle { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .vehicle-form { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .vehicle-form input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .menu { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .delete-btn { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Gestionează Vehicule</h1>
+            <div class="menu">
+                <a href="/admin" class="btn">📋 Misiuni</a>
+                <a href="/manage_drivers" class="btn">👥 Gestionează Șoferi</a>
+                <a href="/manage_vehicles" class="btn">🚗 Gestionează Vehicule</a>
+                <a href="/export_active_missions" class="btn" target="_blank">📤 Exportă Misiuni Active</a>
+                <a href="/logout" class="btn" style="background: #dc3545;">🚪 Logout</a>
+            </div>
+        </div>
+
+        <div class="vehicle-form">
+            <h2>➕ Adaugă Vehicul Nou</h2>
+            <form id="addVehicleForm">
+                <input type="text" name="tip" placeholder="Tip vehicul (ex: Dubă, Camion)" required>
+                <input type="text" name="nr_inmatriculare" placeholder="Număr înmatriculare" required>
+                <button type="submit" class="btn">Adaugă Vehicul</button>
+            </form>
+        </div>
+
+        <h2>📋 Lista Vehicule ({{ vehicles|length }})</h2>
+        {% for vehicle_id, vehicle in vehicles.items() %}
+        <div class="vehicle">
+            <div>
+                <strong>{{ vehicle.tip }}</strong><br>
+                <small>Număr: {{ vehicle.nr_inmatriculare }}</small><br>
+                <small>ID: {{ vehicle_id }}</small>
+            </div>
+            <a href="/delete_vehicle/{{ vehicle_id }}" class="btn delete-btn" onclick="return confirm('Sigur vrei să ștergi acest vehicul?')">🗑️ Șterge</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.getElementById('addVehicleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch('/add_vehicle', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      alert('Vehicul adăugat: ' + data.vehicle_id);
+                      location.reload();
+                  }
+              });
+        });
+    </script>
+</body>
+</html>
