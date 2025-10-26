@@ -1,19 +1,42 @@
 import os
-import psycopg2
+import time
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from datetime import datetime, date
 from functools import wraps
-from dotenv import load_dotenv
 
-load_dotenv()
+# Încercă să importe psycopg2 cu fallback
+try:
+    import psycopg2
+    print("✅ psycopg2 importat cu succes")
+except ImportError:
+    print("❌ psycopg2 nu este instalat. Instalează-l cu: pip install psycopg2-binary")
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    print("✅ python-dotenv importat cu succes")
+except ImportError:
+    print("❌ python-dotenv nu este instalat")
 
 app = Flask(__name__)
 app.secret_key = 'misiuni_soferi_secret_key_2024_postgres'
 
-# Funcție pentru conexiune la baza de date
+# Funcție pentru conexiune la baza de date cu retry
 def get_db_connection():
-    conn = psycopg2.connect(os.environ.get('DATABASE_URL'))
-    return conn
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            conn = psycopg2.connect(os.environ.get('DATABASE_URL'))
+            print(f"✅ Conexiune PostgreSQL reușită (attempt {attempt + 1})")
+            return conn
+        except Exception as e:
+            print(f"❌ Eroare conexiune PostgreSQL (attempt {attempt + 1}): {e}")
+            if attempt < max_retries - 1:
+                time.sleep(2)
+            else:
+                raise e
+
+# Restul codului rămâne la fel...
 
 # Inițializare bază de date
 def init_db():
@@ -552,3 +575,4 @@ if __name__ == '__main__':
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
