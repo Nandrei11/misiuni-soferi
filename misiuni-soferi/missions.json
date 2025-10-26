@@ -1,0 +1,11 @@
+{
+    "mission1": {
+        "sofer": "sofer1",
+        "vehicul": "vehicle1",
+        "data": "2025-10-24",
+        "destinatie": "Iasi",
+        "distanta": "725",
+        "persoana_contact": "jianu- 0725 111 222",
+        "status": "completed"
+    }
+}

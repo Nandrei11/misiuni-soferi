@@ -1,0 +1,12 @@
+{
+    "admin": {
+        "password": "admin123",
+        "type": "admin"
+    },
+    "sofer1": {
+        "password": "",
+        "type": "driver",
+        "nume": "INEL",
+        "prenume": "Ion"
+    }
+}

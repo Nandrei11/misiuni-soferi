@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Export - Misiuni Șoferi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial; margin: 0; padding: 20px; background: #f0f2f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .export-text { background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #ddd; white-space: pre-wrap; font-family: monospace; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📤 Export Misiuni Active</h1>
+        <a href="/admin" class="btn">← Înapoi la Panou</a>
+        
+        <h2>📋 Text pentru WhatsApp:</h2>
+        <div class="export-text" id="exportText">{{ export_text }}</div>
+        
+        <button class="btn" onclick="copyToClipboard()">📋 Copiază Textul</button>
+        
+        <p><strong>Instrucțiuni:</strong></p>
+        <ol>
+            <li>Apasă butonul "Copiază Textul" de mai sus</li>
+            <li>Deschide WhatsApp pe telefon</li>
+            <li>Lipește textul în grupul șoferilor</li>
+            <li>Gata! 🎉</li>
+        </ol>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const text = document.getElementById('exportText').innerText;
+            navigator.clipboard.writeText(text).then(function() {
+                alert('✅ Text copiat! Acum poți să-l lipești în WhatsApp!');
+            }, function(err) {
+                alert('❌ Eroare la copiere: ' + err);
+            });
+        }
+        
+        // Copiază automat la încărcare
+        copyToClipboard();
+    </script>
+</body>
+</html>
