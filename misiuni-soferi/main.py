@@ -61,11 +61,9 @@ def admin_dashboard():
     vehicles = load_db('vehicles.json')
     
     active_missions = {mid: m for mid, m in missions.items() if m.get('status') == 'active'}
-    completed_missions = {mid: m for mid, m in missions.items() if m.get('status') == 'completed'}
     
     return render_template('admin_dashboard.html', 
                          active_missions=active_missions,
-                         completed_missions=completed_missions,
                          drivers=drivers,
                          vehicles=vehicles)
 
@@ -102,8 +100,13 @@ def export_active_missions():
     text_to_copy += "══════════════════\n\n"
     
     for mission_id, mission in active_missions.items():
-        driver_info = drivers.get(mission['sofer'], {'prenume': 'Necunoscut', 'nume': ''})
-        vehicle_info = vehicles.get(mission['vehicul'], {'tip': 'Necunoscut', 'nr_inmatriculare': ''})
+        # Găsește datele șoferului
+        driver_id = mission['sofer']
+        driver_info = drivers.get(driver_id, {'prenume': 'Necunoscut', 'nume': ''})
+        
+        # Găsește datele vehiculului
+        vehicle_id = mission['vehicul']
+        vehicle_info = vehicles.get(vehicle_id, {'tip': 'Necunoscut', 'nr_inmatriculare': ''})
         
         text_to_copy += f"👤 *Șofer:* {driver_info.get('prenume', '')} {driver_info.get('nume', '')}\n"
         text_to_copy += f"🚗 *Vehicul:* {vehicle_info.get('tip', '')} - {vehicle_info.get('nr_inmatriculare', '')}\n"
@@ -116,6 +119,77 @@ def export_active_missions():
     text_to_copy += "_Trimis din aplicația Misiuni Șoferi_"
     
     return render_template('export.html', export_text=text_to_copy)
+
+# === GESTIONARE ȘOFERI ===
+@app.route('/manage_drivers')
+@admin_required
+def manage_drivers():
+    drivers = {k: v for k, v in load_db('users.json').items() if v.get('type') == 'driver'}
+    return render_template('manage_drivers.html', drivers=drivers)
+
+@app.route('/add_driver', methods=['POST'])
+@admin_required
+def add_driver():
+    nume = request.form.get('nume')
+    prenume = request.form.get('prenume')
+    
+    users = load_db('users.json')
+    driver_id = f"sofer{len([u for u in users.values() if u.get('type') == 'driver']) + 1}"
+    
+    users[driver_id] = {
+        'password': '',
+        'type': 'driver',
+        'nume': nume,
+        'prenume': prenume
+    }
+    
+    save_db('users.json', users)
+    return jsonify({'success': True, 'driver_id': driver_id})
+
+@app.route('/delete_driver/<driver_id>')
+@admin_required
+def delete_driver(driver_id):
+    users = load_db('users.json')
+    if driver_id in users:
+        del users[driver_id]
+        save_db('users.json', users)
+    
+    return redirect(url_for('manage_drivers'))
+
+# === GESTIONARE VEHICULE ===
+@app.route('/manage_vehicles')
+@admin_required
+def manage_vehicles():
+    vehicles = load_db('vehicles.json')
+    return render_template('manage_vehicles.html', vehicles=vehicles)
+
+@app.route('/add_vehicle', methods=['POST'])
+@admin_required
+def add_vehicle():
+    tip = request.form.get('tip')
+    nr_inmatriculare = request.form.get('nr_inmatriculare')
+    
+    vehicles = load_db('vehicles.json')
+    vehicle_id = f"vehicle{len(vehicles) + 1}"
+    
+    vehicles[vehicle_id] = {
+        'tip': tip,
+        'nr_inmatriculare': nr_inmatriculare,
+        'sofer': ''
+    }
+    
+    save_db('vehicles.json', vehicles)
+    return jsonify({'success': True, 'vehicle_id': vehicle_id})
+
+@app.route('/delete_vehicle/<vehicle_id>')
+@admin_required
+def delete_vehicle(vehicle_id):
+    vehicles = load_db('vehicles.json')
+    if vehicle_id in vehicles:
+        del vehicles[vehicle_id]
+        save_db('vehicles.json', vehicles)
+    
+    return redirect(url_for('manage_vehicles'))
 
 @app.route('/driver/<driver_id>')
 def driver_view(driver_id):
@@ -149,6 +223,5 @@ if __name__ == '__main__':
     if not os.path.exists('missions.json'):
         save_db('missions.json', {})
     
-    # SCHIMBARE PENTRU RENDER:
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
